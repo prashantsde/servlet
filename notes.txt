@@ -1,0 +1,140 @@
+A web server takes a client request and gives something (PDF, HTML, Picture etc.) back to the client.
+Server means either the physical machine (hardware) or the web server application (software).
+Clients mean both (or either) the human user and the browser application.
+URL: Clients request server using url: http://www.urbandictionary.com:80/define.php?term=acronym
+http: Tells the server which communication protocol.
+www.urbandictionary.com: The unique name of the physical server.
+80: It’s an optional part of the URL. It is a 16 bit number represents a logical connection to a particular piece of software running on the server hardware.  A single server supports many ports. 80 is the default port for HTTP.
+/define.php: The path to the location, on the server of the resource being requested.
+?term=acronym: Optional query string.
+The server’s response contains the actual document that the client requested (or an error code).
+A web client lets the user request something on the server and shows the user the result of the request.
+HTML: Servers often send the browser a set of instructions written in HTML. The HTML tells the browser how to present the content to the user.
+To communicate, clients and servers must speak HTTP, and browsers must know HTML.
+HTTP is the protocol clients and servers use on the web to communicate. The server uses HTTP to send HTML to the client. HTTP is client server protocol that works on top of TCP/IP to get the complete request and response from one place to another.
+Request: method (the action to be performed get, post), The page to access (a URL), form parameters (like arguments to a method).
+Get: This HTTP method is used to ask the server to get a resource and send it back. That resources might be a HTML page, JPEG, PDF etc. Get method does not have body, it has only query parameter that’s also limited.
+Anatomy:  The request line, the request headers.
+The request line: GET select/selectBeerTaste.jsp?color=dark&taste=malty HTTP/1.1
+GET: method name.
+select/selectBeerTaste.jsp: The path to the resource on the web server.
+?color=dark&taste=malty: parameters appended using ?.
+HTTP/1.1: The protocol version that the web browser is requesting.
+The request headers contain: Host, User-Agent, Accept, Accept-Language, Accept-Encoding, Accept charset, keep alive, connection
+POST: It can request something and at the same time send form data to the server. User can’t bookmark a form submission because if user specify search criteria and bookmarked it and after few days user try the same search again and what if there is new data on the server . POST method has body it doesn’t have query param.
+Anatomy: The request line, the request headers, the message body (payload).
+The request line: POST advisor/selectBeerTaste.do HTTP/1.1
+Response: A status code (for whether the request was successful), Content-type (text, picture, HTML, etc.) and the content (the actual HTML, image, etc.).
+Anatomy: protocol, status code, text version of status code, Http response headers and body.
+Protocol, Status code and text version of status code: HTTP/1.1 200 OK
+Http response headers: Set cookie, Content type ( MIME type), Content length, date, server, connection.
+The body: Html, JSON, PDF, JPEG etc.
+MIME type tells the browser what kind of data the browser is about to receive, MIME type value relates to the value listed in the HTTP request’s Accept header.
+Web server application: It serves only static page. Web server can’t generate just-in-time page and write/save data on the server. But a separate helper application (CGI or Servlet) that the web server communicate with can build non-static, just-in-time page (dynamic page).
+Chapter 2 Web App Architecture: high-level overview
+Container: Servlets don’t have a main() method. They are controlled by other application called container. Servlet deploys inside container.
+Container provides: 
+Communication support: Container builds a server socket, listen on port and create streams, it knows the protocol between the web server and itself.
+Lifecycle Management, Multithreading support, Declarative Security: We can manage security using an XML deployment descriptor.
+JSP Support.
+How the container handles  a request:
+    1. User sends request that has a URL to a servlet.
+    2. Container receive the request and creates two objects HttpServletResponse and HttpServletRequest
+    3. Container finds the Servlet based on URL and creates or allocates a thread for that request and call service(), passing the request and response object to the servlet thread.
+    4. service () figures out which servlet method to call based on the HTTP method sent by the client.
+    5. The servlet uses the response object to write out the response to the client. The response goes back through the container.
+    6. The service() completes, so the thread either dies or return to a container managed thread pool.  The request and the response object get ready for garbage collection. The client gets the response.
+A servlet can have three names: Client-know name, deployer-known name and actual file name. These three different for the same servlet improves flexibility and security.
+Deployment Descriptor (DD) tells the container how to run JSP and servlets. It contains mapping names, security roles, error pages, tag libraries, initial configuration information.
+DD benefits:
+Minimizes touching source code, Makes it easier to maintain dynamic security info like access control lists and security roles.
+Allows non-programmers modify and deploy web application.
+A J2EE application server includes both a web Container AND an EJB Container.
+Tomcat is a web Container, but NOT a full J2EE application server.
+A J2EE 1.4 server includes the Servlet spec 2.4, JSP spec 2.0, and EJB spec 2.1
+Tomcat is a web Container, not a full J2EE application server, because Tomcat does not have an EJB Container.
+ Application server example are: Weblogic, Jboss etc.
+Chapter 3
+Mapping the logical name to a servlet class file
+    1. For instance if user is on page http://localhost:8080/Beer-V1/form.html and hit submit button then the browser prepends ‘/Beer-v1/’ to the request because that’s where the client request is coming from. The ‘SelectBeer.do’ in the HTML is relative to the URL of the page it’s on. http://localhost:8080/Beer-V1/SelectBeer.do
+    2. The Container searches the DD and finds a <servlet-mapping> with a <url-pattern> that matches /SelectBeer.do, where the slash (/) represents the context root of the web app, and SelectBeer.do is the logical name of a resource.
+    3. The Container sees that the <servlet- name> for this <url-pattern> is “Ch3 Beer”.
+    4. The Container looks inside the <servlet> tags for something with the <servlet-name> “Ch3 Beer”.
+    5. The Container uses the <servlet-class> in the <servlet> tag to know which servlet class is responsible for handling this request. If the servlet has not been initialized, the class is loaded and the servlet is initialized.
+    6. The Container starts a new thread to handle the request, and passes the request to the thread (to the servlet’s service() method).
+    7. The container sends the response back to the client.
+Chapter 4 Being a servlet
+Servlets live to service clients. A servlets job is to take a client’s request and send back a response.
+Servlet life cycle
+Does not exit ---------> constructor, init() -----> Initialized, service() --------> destroy() -------> Does not exit.
+When very first-time container gets request for servlet then:
+    1. Container load class
+    2. Instantiate servlet (constructor runs). Servlet no-arg constructor runs. 
+    3. Then container calls init (), called only once in the servlet’s life, and must complete before container can call service(). We can override this method to initialize database connection or another configuration before handing any request.
+    4. Container calls service () by starting or allocating a thread from pool. This is where the servlet spends most of its life. (Initialized). Each request runs in a separate thread. We should not override this method, instead override doGet() or doPost().
+    5. The service() invokes doGet() or doPost() based on the HTTP method from the request. This is where our code executed. Always override at least one of them.
+    6. Container calls the destroy(). Destroy()  calls to get servlet a chance to clean up before the servlet is killed. It is also called only once.
+Servlet(Interface):  contains service(ServletRequest, ServletResponse), init(ServletConfig), destroy(), getServletConfig(), getServletInfo().
+    • All servlets have these five methods.
+GenericServlet (Abstract): all methods of Servlet interface plus getInitParameter(String), getInitParameterNames(), getServletContext(), log().
+HttpServlet (Abstract): HttpsServlet implements the service() method to reflect the HTTPness of the servlet.
+The Container calls my servlet’s init() method, but if I don’t override init(), the one from GenericServlet runs. Then when a request comes in, the Container starts or allocates a thread and calls the service() method, which I don’t override, so the service() method from HttpServlet runs. The HttpServlet  service() method then calls my overridden doGet() or doPost(). So each time my doGet() or doPost()runs, it’s in a separate thread.
+The container runs multiple threads to process multiple requests to a single servlet. And every client request generates a new pair of request and response objects.
+For a distributed web app, there would be one instance of a particular servlet per JVM, but each JVM would still have only a single instance of that servlet.
+When the container starts up (run Tomcat), it looks for deployed web apps and then starts searching for servlet class files. Finding the class is the first step.
+Loading the class is the second step and it happens either on container startup or first client use.
+Container makes normal object to servlet by making a ServletConfig and calling init().
+Request and Response:
+ServletRequest(Interface) ---------> HttpServletRequest (interface)
+ServletResponse(Interface) -------> HttpServletResponse (interface)
+The HttpServletRequest and HttpServletResponse methods are about HTTP things like cookies, headers, sessions and relate to the HTTP protocol. 
+Why there’s a GenericServlet and ServletRequest and ServletResponse.  If nobody’s doing anything exept HTTP servlets?
+What If somebody wants to use servlet technology model without the HTTP protocol.
+There are eight HTTP methods: GET, POST, PUT, HEAD, TRACE, DELETE, OPTIONS, CONNECT.
+In real servlet world we care about GET and POST only. GET is idempotent but POST is not idempotent.
+Idempotent mean that the same request can be made twice with no negative consequences on the server.
+How to determines whether the browser sends a GET or POST request? 
+A simple hyperlink is always means a GET. When user submit form ant that form element has no method attribute the method type will be GET.
+When form element has method attribute with “POST” value then the request type is POST.
+When browser sends request type GET then the servlet must have doGet() otherwise server will throw exception.
+What if I want to support both GET and POST from a single servlet?
+In that condition define doGET(), then have the doPost() method delegate to the doGET() method if necessary.
+Why would I ever want to get an InputStream from the request?
+With a GET request there’s no body to care about. But with an HTTP POST there’s body info. Sometime a servlet that process a computer-driven request iin which the body of the request holds textual or binary content to be processed. In this case we can use the getReader or  getInputStream methods.
+What is difference between getHeader() and getIntHeader()?
+getHeader() take key of the header and returns value as String but for a few headers the value type is number ex- Content-Length. In that case we need to convert String to int, so we can use getIntHeader() as a convenience method to save the extra step of parsing the String to an int.
+Response: It is mainly used to just send data back to the client. We can call two methods on the response setContentType() and getWriter(), after that we can simply doing I/O to write HTML or something else like JAR to the stream. We can also use response to set headers, send errors and add cookies.
+Response object provides two choices for output: characters or bytes.
+PrintWriter is use for character : 
+PrintWriter writer = response.getWriter();
+Writer.println(“Some text and html”);
+
+OutputStream is user for writing any thing:
+ServletOutputStream out = response.getOutputStream();
+out.write(aByteArray);
+
+We can add/modify header using setHeader()/addHeader() method;
+Servlet redirect: redirect = client. Client sends request to servlet and servlet send other servlet location in response to serve the client request.
+Original URL : http://www.wickedlysmart.com/myApp/cool/bar.do 
+Case 1: sendRedirect(“foo/stuff.html”); without forward slash “/”.
+Then container build the full URL http://www.wickedlysmart.com/myApp/cool/foo/stuff.html
+Case 1: sendRedirect(“/foo/stuff.html”); with forward slash “/”.
+Then container build the full URL http://www.wickedlysmart.com/foo/stuff.html
+
+Request dispatcher = server. A request dispatch does the work on the server side means when servlet receive request to the client instead to redirect to the client, servlet dispatch the request to other servlet or JSP.
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
